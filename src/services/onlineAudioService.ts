@@ -1,7 +1,6 @@
 import type { OnlineTrack, Track } from '../types/dj'
 
 // Curated high-quality, royalty-free DJ tracks hosted on open CDNs with CORS enabled
-// Users can immediately load these into Deck A / Deck B without having to search or paste a URL first!
 export const CURATED_ONLINE_TRACKS: OnlineTrack[] = [
   {
     id: 'curated-rave-digger-1',
@@ -55,20 +54,6 @@ export const CURATED_ONLINE_TRACKS: OnlineTrack[] = [
   },
 ]
 
-// Known public Invidious instances with open CORS for YouTube metadata
-const INVIDIOUS_INSTANCES = [
-  'https://yt.chocolatemoo53.com',
-  'https://inv.nadeko.net',
-  'https://invidious.nerdvpn.de',
-  'https://vid.puffyan.us',
-]
-
-// Public CORS proxies as failovers
-const CORS_PROXIES = [
-  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-]
-
 export class OnlineAudioService {
   /**
    * Detects if an input string is a valid URL
@@ -90,7 +75,7 @@ export class OnlineAudioService {
   }
 
   /**
-   * Extracts the YouTube Video ID from standard and short URLs
+   * Extracts the YouTube Video ID
    */
   public static extractYouTubeVideoId(url: string): string | null {
     const trimmed = url.trim()
@@ -125,80 +110,46 @@ export class OnlineAudioService {
   }
 
   /**
-   * Searches for tracks across YouTube and curated catalogs
+   * Searches for actual tracks from YouTube or curated lists
    */
   public static async searchTracks(
     query: string,
     platformFilter: 'all' | 'youtube' | 'soundcloud' | 'url' = 'all'
   ): Promise<OnlineTrack[]> {
-    const cleanQuery = query.trim().toLowerCase()
+    const cleanQuery = query.trim()
     if (!cleanQuery) {
       return CURATED_ONLINE_TRACKS.filter(
         (t) => platformFilter === 'all' || t.platform === platformFilter
       )
     }
 
-    // 1. First, search curated library for immediate match
-    const curatedMatches = CURATED_ONLINE_TRACKS.filter((t) => {
+    // 1. Try real backend search endpoint (powered by server-side extractor)
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(cleanQuery)}`, {
+        signal: AbortSignal.timeout(8000),
+      })
+      if (res.ok) {
+        const results: OnlineTrack[] = await res.json()
+        if (Array.isArray(results) && results.length > 0) {
+          return results.filter(
+            (t) => platformFilter === 'all' || t.platform === platformFilter
+          )
+        }
+      }
+    } catch {
+      // Backend search endpoint unavailable or timed out; check curated
+    }
+
+    // 2. Fallback: Search curated library for matching query
+    return CURATED_ONLINE_TRACKS.filter((t) => {
       const matchText = `${t.title} ${t.artist}`.toLowerCase()
       const matchesFilter = platformFilter === 'all' || t.platform === platformFilter
-      return matchesFilter && matchText.includes(cleanQuery)
-    })
-
-    // 2. Query public YouTube (Invidious) API if searching YouTube or All
-    const onlineMatches: OnlineTrack[] = []
-    if (platformFilter === 'all' || platformFilter === 'youtube') {
-      try {
-        const results = await this.queryInvidiousSearch(query)
-        onlineMatches.push(...results)
-      } catch (e) {
-        console.warn('Invidious search fallback active:', e)
-      }
-    }
-
-    // Combine and deduplicate
-    const combined = [...curatedMatches, ...onlineMatches]
-    const seen = new Set<string>()
-    return combined.filter((item) => {
-      if (seen.has(item.id)) return false
-      seen.add(item.id)
-      return true
+      return matchesFilter && matchText.includes(cleanQuery.toLowerCase())
     })
   }
 
   /**
-   * Queries public Invidious instances with fallback
-   */
-  private static async queryInvidiousSearch(query: string): Promise<OnlineTrack[]> {
-    for (const host of INVIDIOUS_INSTANCES) {
-      try {
-        const url = `${host}/api/v1/search?q=${encodeURIComponent(query)}&type=video`
-        const res = await fetch(url, { signal: AbortSignal.timeout(4000) })
-        if (!res.ok) continue
-        const data = await res.json()
-        if (Array.isArray(data)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return data.slice(0, 15).map((v: any) => ({
-            id: `yt-${v.videoId}`,
-            title: v.title || 'Untitled YouTube Track',
-            artist: v.author || 'Unknown Artist',
-            duration: v.lengthSeconds || 180,
-            thumbnailUrl:
-              v.videoThumbnails?.[0]?.url ||
-              `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`,
-            platform: 'youtube' as const,
-            url: `https://www.youtube.com/watch?v=${v.videoId}`,
-          }))
-        }
-      } catch {
-        // Try next instance
-      }
-    }
-    return []
-  }
-
-  /**
-   * Resolves any online track or URL and downloads its audio data as an ArrayBuffer
+   * Resolves any online track or URL and downloads its actual audio data as an ArrayBuffer
    */
   public static async resolveAndDownloadAudio(
     input: OnlineTrack | string,
@@ -210,12 +161,12 @@ export class OnlineAudioService {
     const url = typeof input === 'string' ? input.trim() : input.url
     const platform = typeof input === 'string' ? this.detectPlatform(url) : input.platform
 
-    onProgress?.('Resolving audio stream...')
-
-    // Case 1: Curated track with pre-resolved streamUrl
+    // Case 1: Curated preset track with direct audio CDN URL
     if (typeof input !== 'string' && input.streamUrl) {
-      onProgress?.('Downloading stream audio...')
-      const arrayBuffer = await this.fetchArrayBufferWithCORS(input.streamUrl)
+      onProgress?.('Downloading high-speed audio stream...')
+      const res = await fetch(input.streamUrl)
+      if (!res.ok) throw new Error(`Failed to download audio from ${input.streamUrl}`)
+      const arrayBuffer = await res.arrayBuffer()
       return {
         arrayBuffer,
         metadata: {
@@ -229,59 +180,71 @@ export class OnlineAudioService {
       }
     }
 
-    // Case 2: YouTube URL
-    if (platform === 'youtube') {
-      const videoId = this.extractYouTubeVideoId(url)
-      if (!videoId) {
-        throw new Error('Invalid YouTube URL. Please provide a valid video link.')
+    // Case 2: YouTube or SoundCloud URL
+    if (platform === 'youtube' || platform === 'soundcloud') {
+      onProgress?.('Fetching song info from YouTube / SoundCloud...')
+
+      let metaTitle = typeof input !== 'string' ? input.title : ''
+      let metaArtist = typeof input !== 'string' ? input.artist : ''
+      let metaDuration = typeof input !== 'string' ? input.duration : 0
+      let metaThumbnail = typeof input !== 'string' ? input.thumbnailUrl : ''
+
+      // If we don't have metadata yet (user pasted URL directly), fetch it from /api/info
+      if (!metaTitle) {
+        try {
+          const infoRes = await fetch(`/api/info?url=${encodeURIComponent(url)}`, {
+            signal: AbortSignal.timeout(6000),
+          })
+          if (infoRes.ok) {
+            const info = await infoRes.json()
+            metaTitle = info.title || 'YouTube Song'
+            metaArtist = info.artist || 'Online Artist'
+            metaDuration = info.duration || 180
+            metaThumbnail = info.thumbnailUrl || ''
+          }
+        } catch {
+          metaTitle = 'Online Track'
+          metaArtist = platform === 'youtube' ? 'YouTube' : 'SoundCloud'
+        }
       }
 
-      onProgress?.('Extracting YouTube audio stream...')
-      const { streamUrl, title, artist, duration, coverArtUrl } =
-        await this.resolveYouTubeAudioStream(videoId)
+      onProgress?.(`Streaming actual audio for "${metaTitle || 'song'}"...`)
 
-      onProgress?.('Downloading high-quality audio...')
-      const arrayBuffer = await this.fetchArrayBufferWithCORS(streamUrl)
+      // Stream actual audio bytes via server extraction endpoint
+      const streamEndpoint = `/api/stream?url=${encodeURIComponent(url)}`
+      const streamRes = await fetch(streamEndpoint)
+
+      if (!streamRes.ok) {
+        throw new Error(`Failed to extract audio stream from ${platform}. Please check the URL.`)
+      }
+
+      const arrayBuffer = await streamRes.arrayBuffer()
+      if (arrayBuffer.byteLength < 5000) {
+        throw new Error('Downloaded stream was incomplete or empty.')
+      }
+
+      onProgress?.('Audio downloaded! Decoding into Web Audio engine...')
 
       return {
         arrayBuffer,
         metadata: {
-          title: typeof input !== 'string' ? input.title : title,
-          artist: typeof input !== 'string' ? input.artist : artist,
-          duration: typeof input !== 'string' ? input.duration : duration,
-          coverArtUrl,
-          source: 'youtube',
-          streamUrl,
+          title: metaTitle,
+          artist: metaArtist,
+          duration: metaDuration,
+          coverArtUrl: metaThumbnail,
+          source: platform,
+          streamUrl: url,
         },
       }
     }
 
-    // Case 3: SoundCloud URL
-    if (platform === 'soundcloud') {
-      onProgress?.('Resolving SoundCloud track...')
-      const { streamUrl, title, artist, duration, coverArtUrl } =
-        await this.resolveSoundCloudAudioStream(url)
-
-      onProgress?.('Downloading SoundCloud audio...')
-      const arrayBuffer = await this.fetchArrayBufferWithCORS(streamUrl)
-
-      return {
-        arrayBuffer,
-        metadata: {
-          title,
-          artist,
-          duration,
-          coverArtUrl,
-          source: 'soundcloud',
-          streamUrl,
-        },
-      }
-    }
-
-    // Case 4: Direct Audio URL (mp3/wav/etc)
+    // Case 3: Direct Audio File URL (mp3/wav/ogg/flac)
     onProgress?.('Downloading direct audio file...')
-    const arrayBuffer = await this.fetchArrayBufferWithCORS(url)
-    const fileName = url.split('/').pop()?.split('?')[0] || 'Online Stream'
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`Could not download audio from ${url}`)
+    const arrayBuffer = await res.arrayBuffer()
+
+    const fileName = url.split('/').pop()?.split('?')[0] || 'Audio Stream'
     const cleanTitle = decodeURIComponent(fileName.replace(/\.[^/.]+$/, ''))
 
     return {
@@ -299,123 +262,4 @@ export class OnlineAudioService {
       },
     }
   }
-
-  /**
-   * Resolves a YouTube video ID to a direct audio stream URL
-   */
-  private static async resolveYouTubeAudioStream(videoId: string): Promise<{
-    streamUrl: string
-    title: string
-    artist: string
-    duration: number
-    coverArtUrl: string
-  }> {
-    // Attempt Invidious video format extraction
-    for (const host of INVIDIOUS_INSTANCES) {
-      try {
-        const res = await fetch(`${host}/api/v1/videos/${videoId}`, {
-          signal: AbortSignal.timeout(5000),
-        })
-        if (!res.ok) continue
-        const data = await res.json()
-
-        // Find best audio stream in adaptiveFormats
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const audioFormat = data.adaptiveFormats?.find((f: any) =>
-          f.type?.toLowerCase().startsWith('audio/')
-        )
-
-        if (audioFormat?.url) {
-          return {
-            streamUrl: audioFormat.url,
-            title: data.title || `YouTube Audio [${videoId}]`,
-            artist: data.author || 'YouTube Artist',
-            duration: data.lengthSeconds || 180,
-            coverArtUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-          }
-        }
-      } catch {
-        // Try next host
-      }
-    }
-
-    // Failover: Use curated demonstration track if public YouTube stream extraction is rate-limited
-    const fallback = CURATED_ONLINE_TRACKS[0]
-    return {
-      streamUrl: fallback.streamUrl || '',
-      title: `YouTube Stream [${videoId}]`,
-      artist: 'Online DJ Stream',
-      duration: 214,
-      coverArtUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-    }
-  }
-
-  /**
-   * Resolves a SoundCloud URL to stream
-   */
-  private static async resolveSoundCloudAudioStream(url: string): Promise<{
-    streamUrl: string
-    title: string
-    artist: string
-    duration: number
-    coverArtUrl: string
-  }> {
-    const parts = url.split('/').filter(Boolean)
-    const artist = parts[parts.length - 2] || 'SoundCloud Artist'
-    const title = parts[parts.length - 1]?.replace(/-/g, ' ') || 'SoundCloud Track'
-
-    // Failover to high quality royalty-free stream if SoundCloud requires authenticated client_id
-    const fallback = CURATED_ONLINE_TRACKS[2]
-    return {
-      streamUrl: fallback.streamUrl || '',
-      title: title.charAt(0).toUpperCase() + title.slice(1),
-      artist: artist.charAt(0).toUpperCase() + artist.slice(1),
-      duration: 242,
-      coverArtUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
-    }
-  }
-
-  /**
-   * Fetches an ArrayBuffer with automatic CORS proxy fallback
-   */
-  private static async fetchArrayBufferWithCORS(url: string): Promise<ArrayBuffer> {
-    // 1. Direct fetch
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(12000) })
-      if (res.ok) {
-        const ab = await res.arrayBuffer()
-        if (ab.byteLength > 1000) return ab
-      }
-    } catch {
-      // Direct fetch failed or was blocked by CORS; proceed to proxies
-    }
-
-    // 2. Try CORS proxies
-    for (const proxyFn of CORS_PROXIES) {
-      try {
-        const proxiedUrl = proxyFn(url)
-        const res = await fetch(proxiedUrl, { signal: AbortSignal.timeout(15000) })
-        if (res.ok) {
-          const ab = await res.arrayBuffer()
-          if (ab.byteLength > 1000) return ab
-        }
-      } catch {
-        // Try next proxy
-      }
-    }
-
-    // 3. Fallback to guaranteed working audio stream so deck is never blocked
-    try {
-      const fallbackUrl = CURATED_ONLINE_TRACKS[0].streamUrl!
-      const res = await fetch(fallbackUrl, { signal: AbortSignal.timeout(10000) })
-      if (res.ok) {
-        return await res.arrayBuffer()
-      }
-    } catch {
-      // proceed to error
-    }
-
-    throw new Error('Unable to download audio stream due to network or CORS restrictions.')
-  }
 }
-

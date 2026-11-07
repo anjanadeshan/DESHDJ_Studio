@@ -1,3 +1,7 @@
+# Binary tools
+yt-dlp.exe
+*.exe
+
 # Logs
 logs
 *.log
