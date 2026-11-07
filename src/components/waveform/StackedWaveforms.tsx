@@ -268,7 +268,7 @@ export const StackedWaveforms: React.FC<StackedWaveformsProps> = ({
       const canvas = canvasRef.current
       if (canvas && canvas.parentElement) {
         canvas.width = canvas.parentElement.clientWidth
-        canvas.height = 180
+        canvas.height = window.innerWidth < 768 ? 120 : 180
       }
     }
     handleResize()
@@ -322,36 +322,36 @@ export const StackedWaveforms: React.FC<StackedWaveformsProps> = ({
   }
 
   return (
-    <div className="relative w-full bg-[#0a0b0e] border-y border-[#202534] shadow-inner select-none rounded-md overflow-hidden">
-      {/* Zoom controls */}
-      <div className="absolute right-2 top-2 z-10 flex gap-1 bg-[#13151b]/85 backdrop-blur rounded p-0.5 border border-[#2b3040]">
-        <button
-          onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
-          className="px-2 py-0.5 text-[10px] font-mono text-neutral-300 hover:text-white hover:bg-neutral-700/50 rounded font-bold"
-          title="Zoom Out"
-        >
-          -
-        </button>
-        <span className="text-[10px] font-mono text-neutral-400 px-1 py-0.5">
-          {zoom.toFixed(1)}x
-        </span>
-        <button
-          onClick={() => setZoom((z) => Math.min(2.5, z + 0.25))}
-          className="px-2 py-0.5 text-[10px] font-mono text-neutral-300 hover:text-white hover:bg-neutral-700/50 rounded font-bold"
-          title="Zoom In"
-        >
-          +
-        </button>
-      </div>
+      <div className="relative w-full bg-[#0a0b0e] border-y border-[#202534] shadow-inner select-none rounded-md overflow-hidden shrink-0">
+        {/* Zoom controls */}
+        <div className="absolute right-2 top-2 z-10 flex gap-1 bg-[#13151b]/85 backdrop-blur rounded p-0.5 border border-[#2b3040]">
+          <button
+            onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
+            className="px-2 py-0.5 text-[10px] font-mono text-neutral-300 hover:text-white hover:bg-neutral-700/50 rounded font-bold"
+            title="Zoom Out"
+          >
+            -
+          </button>
+          <span className="text-[10px] font-mono text-neutral-400 px-1 py-0.5">
+            {zoom.toFixed(1)}x
+          </span>
+          <button
+            onClick={() => setZoom((z) => Math.min(2.5, z + 0.25))}
+            className="px-2 py-0.5 text-[10px] font-mono text-neutral-300 hover:text-white hover:bg-neutral-700/50 rounded font-bold"
+            title="Zoom In"
+          >
+            +
+          </button>
+        </div>
 
-      <canvas
-        ref={canvasRef}
-        height={180}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        className="w-full cursor-grab active:cursor-grabbing block"
-      />
-    </div>
-  )
+        <canvas
+          ref={canvasRef}
+          height={180}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          className="w-full cursor-grab active:cursor-grabbing block"
+        />
+      </div>
+      )
 }

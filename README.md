@@ -27,6 +27,12 @@
 
 ---
 
+### 📱 Mobile Responsive Performance Mode
+![Mobile Deck View](screenshots/mobile_deck_a.png)
+*On mobile smartphones and tablets (<1280px), DESHDJ Studio automatically activates an ergonomic segmented view (`[ DECK A ]` `[ MIXER ]` `[ DECK B ]` `[ ALL ]`) with scaled touch platters, large CUE/PLAY buttons, and an instant-access bottom quick-crossfader—with zero changes to the pixel-perfect desktop side-by-side console.*
+
+---
+
 ### 🎚️ 4-Deck Performance Mode
 ![4-Deck Mode](screenshots/four_deck_mode.png)
 *Toggle seamlessly between 2-Deck and 4-Deck mode with dynamic flippable decks ($A \leftrightarrow C$ and $B \leftrightarrow D$).*
@@ -98,6 +104,14 @@
 - **IndexedDB Persistence**: Track library and pre-extracted waveform peak arrays persist across page reloads via `idb-keyval`.
 - **Targeted Deck Source Buttons**: Clicking `SOURCE` on Deck A displays only `LOAD DECK A`; clicking `SOURCE` on Deck B displays only `LOAD DECK B`.
 - **Priority Sorting**: The most recently loaded track is sorted to the **#1 position at the top of the table** with a `LAST LOADED` badge for instant access.
+
+---
+
+### 7. 📱 Mobile & Touch Ergonomics
+- **Segmented Mobile Views**: Fast 1-tap switching between `[ DECK A ]`, `[ MIXER ]`, `[ DECK B ]`, and `[ ALL ]` stacked mode.
+- **Docked Quick-Crossfader**: Always accessible at the bottom of the screen when viewing Deck A or Deck B on mobile, letting DJs perform transitions without constantly switching back to the Mixer tab.
+- **Touch Platters**: Responsive jog wheel geometry that scales dynamically from 360px phones to 4K displays without clipping controls.
+- **Zero Desktop Regressions**: Desktop screens ($\ge 1280$px / `xl:`) remain 100% untouched, side-by-side, and pixel-perfect.
 
 ---
 
@@ -213,6 +227,50 @@ d:/projects/DJ/
 ├── README.md                  # Project overview & documentation
 └── package.json
 ```
+
+---
+
+## 🌐 Deploying Publicly to aaPanel
+
+**DESHDJ Studio** compiles to a pure, client-side static build requiring zero backend dependencies, Node.js runtime, or databases on your server.
+
+### 1. Pre-Packaged Archive
+The production build is packaged and ready to upload:
+- Archive: [`deshdj_studio_build.zip`](file:///d:/projects/DJ/deshdj_studio_build.zip) (or the [`dist/`](file:///d:/projects/DJ/dist/) folder).
+
+### 2. Step-by-Step aaPanel Setup
+1. **Create the Website in aaPanel**:
+   - Go to **Website** in the aaPanel side menu.
+   - Click **Add site**.
+   - Enter your domain name (e.g., `dj.yourdomain.com`).
+   - In **PHP Version**, select **`Pure static`** (no PHP needed).
+   - Click **Submit**.
+
+2. **Upload the Build Archive**:
+   - In the websites table, click on the site's **Root Directory** link (e.g. `/www/wwwroot/dj.yourdomain.com`).
+   - Delete any default `index.html` or `404.html` files.
+   - Click **Upload** -> Select `deshdj_studio_build.zip` from this repository.
+   - Click **Unzip** -> Extract directly into the root directory.
+   - Confirm that `index.html` and the `assets/` folder are located directly in `/www/wwwroot/dj.yourdomain.com/`.
+
+3. **Enable SSL / HTTPS (Required for File System Access API)**:
+   - Click on your website name in aaPanel -> Go to the **SSL** tab.
+   - Select **Let's Encrypt** -> Check your domain -> Click **Apply**.
+   - Turn ON **Force HTTPS**.
+   - *Why is HTTPS essential?* Browsers restrict `window.showDirectoryPicker()` (Open Music Folder) to Secure Contexts (`https://`). With HTTPS enabled in aaPanel, users can open music folders directly from their PC on the live public domain.
+
+4. **Nginx Cache & SPA Configuration (Optional)**:
+   - Under website settings -> **Config** or **URL rewrite**, add:
+     ```nginx
+     location / {
+         try_files $uri $uri/ /index.html;
+     }
+
+     location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$ {
+         expires 30d;
+         add_header Cache-Control "public, no-transform";
+     }
+     ```
 
 ---
 

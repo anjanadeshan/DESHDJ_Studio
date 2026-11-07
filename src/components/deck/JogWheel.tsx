@@ -105,7 +105,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
   const handlePlatterPointerDown = (e: React.PointerEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+      ; (e.target as HTMLElement).setPointerCapture(e.pointerId)
 
     const angle = getAngle(e.clientX, e.clientY)
     lastAngleRef.current = angle
@@ -162,7 +162,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
 
   const handlePlatterPointerUp = (e: React.PointerEvent) => {
     try {
-      ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+      ; (e.target as HTMLElement).releasePointerCapture(e.pointerId)
     } catch {
       // ignore
     }
@@ -180,7 +180,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
   const handleRimPointerDown = (e: React.PointerEvent) => {
     e.preventDefault()
     setIsRimNudging(true)
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+      ; (e.target as HTMLElement).setPointerCapture(e.pointerId)
     lastAngleRef.current = getAngle(e.clientX, e.clientY)
     lastTimeRef.current = performance.now()
   }
@@ -204,7 +204,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
   const handleRimPointerUp = (e: React.PointerEvent) => {
     setIsRimNudging(false)
     try {
-      ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+      ; (e.target as HTMLElement).releasePointerCapture(e.pointerId)
     } catch {
       // ignore
     }
@@ -219,7 +219,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
         onPointerDown={handleRimPointerDown}
         onPointerMove={handleRimPointerMove}
         onPointerUp={handleRimPointerUp}
-        className="relative w-52 h-52 rounded-full bg-[#101218] p-2 border-2 border-[#2b3042] shadow-2xl flex items-center justify-center cursor-ew-resize group"
+        className="relative w-38 h-38 xs:w-44 xs:h-44 sm:w-52 sm:h-52 rounded-full bg-[#101218] p-2 border-2 border-[#2b3042] shadow-2xl flex items-center justify-center cursor-ew-resize group"
         title="Jog Wheel: Drag Center Vinyl to scratch/scrub, Outer Rim to pitch bend/nudge"
       >
         {/* Outer Dot Ring Ticks (CDJ rim dots) */}
@@ -230,7 +230,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
           onPointerDown={handlePlatterPointerDown}
           onPointerMove={handlePlatterPointerMove}
           onPointerUp={handlePlatterPointerUp}
-          className="relative w-42 h-42 rounded-full cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center transition-shadow"
+          className="relative w-30 h-30 xs:w-36 xs:h-36 sm:w-42 sm:h-42 rounded-full cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center transition-shadow"
           style={{
             background:
               'radial-gradient(circle, #0e1017 0%, #151821 40%, #0a0b0f 70%, #1f2330 100%)',
@@ -263,7 +263,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
 
             {/* Center Spindle Label */}
             <div
-              className="w-16 h-16 rounded-full border border-[#3b4256] flex flex-col items-center justify-center shadow-lg"
+              className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full border border-[#3b4256] flex flex-col items-center justify-center shadow-lg"
               style={{
                 background: 'radial-gradient(circle, #202432 0%, #0c0d12 100%)',
               }}
@@ -275,9 +275,8 @@ export const JogWheel: React.FC<JogWheelProps> = ({
                 DECK {deckId}
               </span>
               <span
-                className={`text-[8px] font-mono font-bold tracking-tighter ${
-                  vinylMode ? 'text-[#00e5ff]' : 'text-neutral-400'
-                }`}
+                className={`text-[8px] font-mono font-bold tracking-tighter ${vinylMode ? 'text-[#00e5ff]' : 'text-neutral-400'
+                  }`}
               >
                 {vinylMode ? 'VINYL' : 'CDJ'}
               </span>

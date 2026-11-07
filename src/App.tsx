@@ -56,6 +56,9 @@ export function App() {
   const [activeLeftDeckId, setActiveLeftDeckId] = useState<'A' | 'C'>('A')
   const [activeRightDeckId, setActiveRightDeckId] = useState<'B' | 'D'>('B')
 
+  // Mobile View Navigation: 'A' | 'mixer' | 'B' | 'both' (only active on < xl screens)
+  const [mobileActiveTab, setMobileActiveTab] = useState<'A' | 'mixer' | 'B' | 'both'>('A')
+
   // URL query parameter support for direct modal viewing and testing (?modal=library, ?mode=4deck, ?modal=settings, ?modal=hotkeys)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -1053,147 +1056,221 @@ export function App() {
           onSeekB={(time) => handleSeek(activeRightDeckId, time)}
         />
 
-        {/* Big Spacious 2-Deck Console */}
-        <div className="flex items-start justify-center gap-3.5 flex-1 min-h-[520px]">
-          {/* Left Physical Deck */}
-          <DeckView
-            deck={leftDeck}
-            color={leftColor}
-            altDeckId={isFourDeckMode ? (activeLeftDeckId === 'A' ? 'C' : 'A') : undefined}
-            onFlipDeck={() =>
-              setActiveLeftDeckId((prev) => (prev === 'A' ? 'C' : 'A'))
-            }
-            onToggleVinylMode={() => handleToggleVinylMode(leftDeck.id)}
-            onOpenLibraryForDeck={() => handleOpenLibraryForDeck(leftDeck.id)}
-            onPlayPause={() => handlePlayPause(leftDeck.id)}
-            onCueDown={() => handleCueDown(leftDeck.id)}
-            onCueUp={() => handleCueUp(leftDeck.id)}
-            onSeek={(t) => handleSeek(leftDeck.id, t)}
-            onStartScratch={() => handleStartScratch(leftDeck.id)}
-            onScratch={(d, v) => handleScratch(leftDeck.id, d, v)}
-            onStopScratch={() => handleStopScratch(leftDeck.id)}
-            onNudge={(n) => handleNudge(leftDeck.id, n)}
-            onPitchChange={(p) => handlePitchChange(leftDeck.id, p)}
-            onPitchRangeCycle={() => handlePitchRangeCycle(leftDeck.id)}
-            onKeyLockToggle={() => handleKeyLockToggle(leftDeck.id)}
-            onSyncToggle={() => handleSyncToggle(leftDeck.id)}
-            onPitchBend={(dir) => handlePitchBend(leftDeck.id, dir)}
-            onSetHotCue={(idx) => handleSetHotCue(leftDeck.id, idx)}
-            onClearHotCue={(idx) => handleClearHotCue(leftDeck.id, idx)}
-            onTriggerLoop={(beats) => handleTriggerLoop(leftDeck.id, beats)}
-            onToggleLoop={() => handleToggleLoop(leftDeck.id)}
-            onHalveLoop={() => handleHalveLoop(leftDeck.id)}
-            onDoubleLoop={() => handleDoubleLoop(leftDeck.id)}
-            onLoopIn={() => handleLoopIn(leftDeck.id)}
-            onLoopOut={() => handleLoopOut(leftDeck.id)}
-            onToggleFX={() => handleToggleFX(leftDeck.id)}
-            onChangeFXType={(t) => handleChangeFXType(leftDeck.id, t)}
-            onChangeFXDryWet={(w) => handleChangeFXDryWet(leftDeck.id, w)}
-            onChangeFXParam={(p) => handleChangeFXParam(leftDeck.id, p)}
-            onDropFileOrTrack={(item) => handleDropOnDeck(item, leftDeck.id)}
-          />
+          {/* Mobile View Switcher Pills (Hidden on desktop xl:) */}
+          <div className="xl:hidden flex items-center justify-between gap-1.5 p-1 bg-[#0b0d14] rounded-xl border border-[#1e2333] shrink-0">
+            <button
+              onClick={() => setMobileActiveTab('A')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all text-center ${mobileActiveTab === 'A'
+                  ? 'bg-[#00e5ff] text-black shadow-[0_0_10px_rgba(0,229,255,0.4)]'
+                  : 'text-neutral-400 hover:text-white hover:bg-[#151824]'
+                }`}
+            >
+              DECK {activeLeftDeckId}
+            </button>
+            <button
+              onClick={() => setMobileActiveTab('mixer')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all text-center ${mobileActiveTab === 'mixer'
+                  ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.4)]'
+                  : 'text-neutral-400 hover:text-white hover:bg-[#151824]'
+                }`}
+            >
+              MIXER
+            </button>
+            <button
+              onClick={() => setMobileActiveTab('B')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all text-center ${mobileActiveTab === 'B'
+                  ? 'bg-[#ff3366] text-white shadow-[0_0_10px_rgba(255,51,102,0.4)]'
+                  : 'text-neutral-400 hover:text-white hover:bg-[#151824]'
+                }`}
+            >
+              DECK {activeRightDeckId}
+            </button>
+            <button
+              onClick={() => setMobileActiveTab('both')}
+              className={`py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all text-center ${mobileActiveTab === 'both'
+                  ? 'bg-[#a855f7] text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]'
+                  : 'text-neutral-400 hover:text-white hover:bg-[#151824]'
+                }`}
+            >
+              ALL
+            </button>
+          </div>
 
-          {/* Central DJ Mixer */}
-          <MixerSection
-            decks={decks}
-            activeLeftDeckId={activeLeftDeckId}
-            activeRightDeckId={activeRightDeckId}
-            mixerState={mixerState}
-            onChangeEQ={handleChangeEQ}
-            onChangeFilter={handleChangeFilter}
-            onChangeTrim={handleChangeTrim}
-            onChangeVolume={handleChangeVolume}
-            onToggleCue={handleToggleCue}
-            onChangeCrossfaderAssign={handleChangeCrossfaderAssign}
-            onChangeCrossfader={handleChangeCrossfader}
-            onChangeCrossfaderCurve={handleChangeCrossfaderCurve}
-            onChangeMasterVolume={handleChangeMasterVolume}
-            onChangeHeadphoneVolume={handleChangeHeadphoneVolume}
-            onChangeHeadphoneMix={handleChangeHeadphoneMix}
-            onToggleSplitCue={handleToggleSplitCue}
-          />
+          {/* Main DJ Console Workspace: 3-column side-by-side on desktop (xl:), responsive tabbed on mobile */}
+          <div className="flex flex-col xl:flex-row items-center xl:items-start justify-start xl:justify-center gap-3.5 flex-1 xl:min-h-[520px]">
+            {/* Left Physical Deck */}
+            <div className={`w-full xl:w-auto justify-center ${mobileActiveTab === 'A' || mobileActiveTab === 'both' ? 'flex' : 'hidden xl:flex'}`}>
+              <DeckView
+                deck={leftDeck}
+                color={leftColor}
+                altDeckId={isFourDeckMode ? (activeLeftDeckId === 'A' ? 'C' : 'A') : undefined}
+                onFlipDeck={() =>
+                  setActiveLeftDeckId((prev) => (prev === 'A' ? 'C' : 'A'))
+                }
+                onToggleVinylMode={() => handleToggleVinylMode(leftDeck.id)}
+                onOpenLibraryForDeck={() => handleOpenLibraryForDeck(leftDeck.id)}
+                onPlayPause={() => handlePlayPause(leftDeck.id)}
+                onCueDown={() => handleCueDown(leftDeck.id)}
+                onCueUp={() => handleCueUp(leftDeck.id)}
+                onSeek={(t) => handleSeek(leftDeck.id, t)}
+                onStartScratch={() => handleStartScratch(leftDeck.id)}
+                onScratch={(d, v) => handleScratch(leftDeck.id, d, v)}
+                onStopScratch={() => handleStopScratch(leftDeck.id)}
+                onNudge={(n) => handleNudge(leftDeck.id, n)}
+                onPitchChange={(p) => handlePitchChange(leftDeck.id, p)}
+                onPitchRangeCycle={() => handlePitchRangeCycle(leftDeck.id)}
+                onKeyLockToggle={() => handleKeyLockToggle(leftDeck.id)}
+                onSyncToggle={() => handleSyncToggle(leftDeck.id)}
+                onPitchBend={(dir) => handlePitchBend(leftDeck.id, dir)}
+                onSetHotCue={(idx) => handleSetHotCue(leftDeck.id, idx)}
+                onClearHotCue={(idx) => handleClearHotCue(leftDeck.id, idx)}
+                onTriggerLoop={(beats) => handleTriggerLoop(leftDeck.id, beats)}
+                onToggleLoop={() => handleToggleLoop(leftDeck.id)}
+                onHalveLoop={() => handleHalveLoop(leftDeck.id)}
+                onDoubleLoop={() => handleDoubleLoop(leftDeck.id)}
+                onLoopIn={() => handleLoopIn(leftDeck.id)}
+                onLoopOut={() => handleLoopOut(leftDeck.id)}
+                onToggleFX={() => handleToggleFX(leftDeck.id)}
+                onChangeFXType={(t) => handleChangeFXType(leftDeck.id, t)}
+                onChangeFXDryWet={(w) => handleChangeFXDryWet(leftDeck.id, w)}
+                onChangeFXParam={(p) => handleChangeFXParam(leftDeck.id, p)}
+                onDropFileOrTrack={(item) => handleDropOnDeck(item, leftDeck.id)}
+              />
+            </div>
 
-          {/* Right Physical Deck */}
-          <DeckView
-            deck={rightDeck}
-            color={rightColor}
-            altDeckId={isFourDeckMode ? (activeRightDeckId === 'B' ? 'D' : 'B') : undefined}
-            onFlipDeck={() =>
-              setActiveRightDeckId((prev) => (prev === 'B' ? 'D' : 'B'))
-            }
-            onToggleVinylMode={() => handleToggleVinylMode(rightDeck.id)}
-            onOpenLibraryForDeck={() => handleOpenLibraryForDeck(rightDeck.id)}
-            onPlayPause={() => handlePlayPause(rightDeck.id)}
-            onCueDown={() => handleCueDown(rightDeck.id)}
-            onCueUp={() => handleCueUp(rightDeck.id)}
-            onSeek={(t) => handleSeek(rightDeck.id, t)}
-            onStartScratch={() => handleStartScratch(rightDeck.id)}
-            onScratch={(d, v) => handleScratch(rightDeck.id, d, v)}
-            onStopScratch={() => handleStopScratch(rightDeck.id)}
-            onNudge={(n) => handleNudge(rightDeck.id, n)}
-            onPitchChange={(p) => handlePitchChange(rightDeck.id, p)}
-            onPitchRangeCycle={() => handlePitchRangeCycle(rightDeck.id)}
-            onKeyLockToggle={() => handleKeyLockToggle(rightDeck.id)}
-            onSyncToggle={() => handleSyncToggle(rightDeck.id)}
-            onPitchBend={(dir) => handlePitchBend(rightDeck.id, dir)}
-            onSetHotCue={(idx) => handleSetHotCue(rightDeck.id, idx)}
-            onClearHotCue={(idx) => handleClearHotCue(rightDeck.id, idx)}
-            onTriggerLoop={(beats) => handleTriggerLoop(rightDeck.id, beats)}
-            onToggleLoop={() => handleToggleLoop(rightDeck.id)}
-            onHalveLoop={() => handleHalveLoop(rightDeck.id)}
-            onDoubleLoop={() => handleDoubleLoop(rightDeck.id)}
-            onLoopIn={() => handleLoopIn(rightDeck.id)}
-            onLoopOut={() => handleLoopOut(rightDeck.id)}
-            onToggleFX={() => handleToggleFX(rightDeck.id)}
-            onChangeFXType={(t) => handleChangeFXType(rightDeck.id, t)}
-            onChangeFXDryWet={(w) => handleChangeFXDryWet(rightDeck.id, w)}
-            onChangeFXParam={(p) => handleChangeFXParam(rightDeck.id, p)}
-            onDropFileOrTrack={(item) => handleDropOnDeck(item, rightDeck.id)}
-          />
+            {/* Central DJ Mixer */}
+            <div className={`w-full xl:w-auto justify-center ${mobileActiveTab === 'mixer' || mobileActiveTab === 'both' ? 'flex' : 'hidden xl:flex'}`}>
+              <MixerSection
+                decks={decks}
+                activeLeftDeckId={activeLeftDeckId}
+                activeRightDeckId={activeRightDeckId}
+                mixerState={mixerState}
+                onChangeEQ={handleChangeEQ}
+                onChangeFilter={handleChangeFilter}
+                onChangeTrim={handleChangeTrim}
+                onChangeVolume={handleChangeVolume}
+                onToggleCue={handleToggleCue}
+                onChangeCrossfaderAssign={handleChangeCrossfaderAssign}
+                onChangeCrossfader={handleChangeCrossfader}
+                onChangeCrossfaderCurve={handleChangeCrossfaderCurve}
+                onChangeMasterVolume={handleChangeMasterVolume}
+                onChangeHeadphoneVolume={handleChangeHeadphoneVolume}
+                onChangeHeadphoneMix={handleChangeHeadphoneMix}
+                onToggleSplitCue={handleToggleSplitCue}
+              />
+            </div>
+
+            {/* Right Physical Deck */}
+            <div className={`w-full xl:w-auto justify-center ${mobileActiveTab === 'B' || mobileActiveTab === 'both' ? 'flex' : 'hidden xl:flex'}`}>
+              <DeckView
+                deck={rightDeck}
+                color={rightColor}
+                altDeckId={isFourDeckMode ? (activeRightDeckId === 'B' ? 'D' : 'B') : undefined}
+                onFlipDeck={() =>
+                  setActiveRightDeckId((prev) => (prev === 'B' ? 'D' : 'B'))
+                }
+                onToggleVinylMode={() => handleToggleVinylMode(rightDeck.id)}
+                onOpenLibraryForDeck={() => handleOpenLibraryForDeck(rightDeck.id)}
+                onPlayPause={() => handlePlayPause(rightDeck.id)}
+                onCueDown={() => handleCueDown(rightDeck.id)}
+                onCueUp={() => handleCueUp(rightDeck.id)}
+                onSeek={(t) => handleSeek(rightDeck.id, t)}
+                onStartScratch={() => handleStartScratch(rightDeck.id)}
+                onScratch={(d, v) => handleScratch(rightDeck.id, d, v)}
+                onStopScratch={() => handleStopScratch(rightDeck.id)}
+                onNudge={(n) => handleNudge(rightDeck.id, n)}
+                onPitchChange={(p) => handlePitchChange(rightDeck.id, p)}
+                onPitchRangeCycle={() => handlePitchRangeCycle(rightDeck.id)}
+                onKeyLockToggle={() => handleKeyLockToggle(rightDeck.id)}
+                onSyncToggle={() => handleSyncToggle(rightDeck.id)}
+                onPitchBend={(dir) => handlePitchBend(rightDeck.id, dir)}
+                onSetHotCue={(idx) => handleSetHotCue(rightDeck.id, idx)}
+                onClearHotCue={(idx) => handleClearHotCue(rightDeck.id, idx)}
+                onTriggerLoop={(beats) => handleTriggerLoop(rightDeck.id, beats)}
+                onToggleLoop={() => handleToggleLoop(rightDeck.id)}
+                onHalveLoop={() => handleHalveLoop(rightDeck.id)}
+                onDoubleLoop={() => handleDoubleLoop(rightDeck.id)}
+                onLoopIn={() => handleLoopIn(rightDeck.id)}
+                onLoopOut={() => handleLoopOut(rightDeck.id)}
+                onToggleFX={() => handleToggleFX(rightDeck.id)}
+                onChangeFXType={(t) => handleChangeFXType(rightDeck.id, t)}
+                onChangeFXDryWet={(w) => handleChangeFXDryWet(rightDeck.id, w)}
+                onChangeFXParam={(p) => handleChangeFXParam(rightDeck.id, p)}
+                onDropFileOrTrack={(item) => handleDropOnDeck(item, rightDeck.id)}
+              />
+            </div>
+          </div>
+
+          {/* Mobile Quick-Crossfader Strip (Visible only when in Single Deck View on mobile for easy DJ transitions) */}
+          {(mobileActiveTab === 'A' || mobileActiveTab === 'B') && (
+            <div className="xl:hidden flex items-center justify-between gap-3 px-4 py-2.5 bg-[#0e1018] border border-[#23283a] rounded-xl shadow-lg shrink-0 w-full max-w-lg mx-auto">
+              <span
+                className="text-[11px] font-mono font-bold"
+                style={{ color: leftColor }}
+              >
+                DECK {activeLeftDeckId}
+              </span>
+              <input
+                type="range"
+                min="-1"
+                max="1"
+                step="0.01"
+                value={mixerState.crossfader}
+                onChange={(e) => handleChangeCrossfader(parseFloat(e.target.value))}
+                className="flex-1 accent-[#00e5ff] cursor-pointer h-2 bg-[#1c202e] rounded-lg"
+                title="Quick Crossfader"
+              />
+              <span
+                className="text-[11px] font-mono font-bold"
+                style={{ color: rightColor }}
+              >
+                DECK {activeRightDeckId}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Full Popup Track Library Modal */}
+        <LibraryModal
+          isOpen={isLibraryOpen}
+          tracks={tracks}
+          isFourDeckMode={isFourDeckMode}
+          targetDeckId={targetDeckForLibrary}
+          lastSelectedTrackId={lastSelectedTrackId}
+          onClose={() => {
+            setIsLibraryOpen(false)
+            setTargetDeckForLibrary(undefined)
+          }}
+          onAddTracks={(newTracks) => {
+            setTracks((prev) => {
+              const updated = [...prev, ...newTracks]
+              TrackDatabase.saveLibrary(updated)
+              return updated
+            })
+          }}
+          onClearLibrary={() => {
+            TrackDatabase.clearLibrary()
+            setTracks([])
+          }}
+          onLoadTrackToDeck={(track, deckId) => handleLoadTrack(track, deckId)}
+        />
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          isFourDeckMode={isFourDeckMode}
+          crossfaderCurve={mixerState.crossfaderCurve}
+          onClose={() => setIsSettingsOpen(false)}
+          onToggleDeckMode={handleSetDeckMode}
+          onChangeCrossfaderCurve={handleChangeCrossfaderCurve}
+        />
+
+        {/* Keyboard Shortcuts Modal */}
+        <KeyboardModal
+          isOpen={isKeyboardHelpOpen}
+          onClose={() => setIsKeyboardHelpOpen(false)}
+        />
       </div>
-
-      {/* Full Popup Track Library Modal */}
-      <LibraryModal
-        isOpen={isLibraryOpen}
-        tracks={tracks}
-        isFourDeckMode={isFourDeckMode}
-        targetDeckId={targetDeckForLibrary}
-        lastSelectedTrackId={lastSelectedTrackId}
-        onClose={() => {
-          setIsLibraryOpen(false)
-          setTargetDeckForLibrary(undefined)
-        }}
-        onAddTracks={(newTracks) => {
-          setTracks((prev) => {
-            const updated = [...prev, ...newTracks]
-            TrackDatabase.saveLibrary(updated)
-            return updated
-          })
-        }}
-        onClearLibrary={() => {
-          TrackDatabase.clearLibrary()
-          setTracks([])
-        }}
-        onLoadTrackToDeck={(track, deckId) => handleLoadTrack(track, deckId)}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        isFourDeckMode={isFourDeckMode}
-        crossfaderCurve={mixerState.crossfaderCurve}
-        onClose={() => setIsSettingsOpen(false)}
-        onToggleDeckMode={handleSetDeckMode}
-        onChangeCrossfaderCurve={handleChangeCrossfaderCurve}
-      />
-
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardModal
-        isOpen={isKeyboardHelpOpen}
-        onClose={() => setIsKeyboardHelpOpen(false)}
-      />
-    </div>
-  )
+      )
 }
-export default App
+      export default App

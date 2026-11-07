@@ -124,9 +124,9 @@ export const DeckView: React.FC<DeckViewProps> = ({
       onDragEnter={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative flex flex-col bg-[#12141c] p-3 rounded-xl border shadow-2xl gap-2.5 w-full max-w-[620px] select-none transition-all ${isDragOver
-          ? 'border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.4)] scale-[1.01]'
-          : 'border-[#232736]'
+      className={`relative flex flex-col bg-[#12141c] p-2 sm:p-3 rounded-xl border shadow-2xl gap-2 sm:gap-2.5 w-full max-w-[620px] select-none transition-all ${isDragOver
+        ? 'border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.4)] scale-[1.01]'
+        : 'border-[#232736]'
         }`}
       style={{
         borderTop: `4px solid ${color}`,
@@ -179,8 +179,8 @@ export const DeckView: React.FC<DeckViewProps> = ({
               <button
                 onClick={onToggleVinylMode}
                 className={`flex items-center gap-1 px-2 py-1 rounded border text-[10px] font-mono font-bold transition-all cursor-pointer active:scale-95 ${deck.vinylMode
-                    ? 'bg-[#00e5ff]/20 text-[#00e5ff] border-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.3)]'
-                    : 'bg-[#181a24] text-neutral-400 border-[#2a2f40] hover:text-white'
+                  ? 'bg-[#00e5ff]/20 text-[#00e5ff] border-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.3)]'
+                  : 'bg-[#181a24] text-neutral-400 border-[#2a2f40] hover:text-white'
                   }`}
                 title={`Toggle Vinyl Mode vs CDJ Mode (Current: ${deck.vinylMode ? 'VINYL' : 'CDJ'})`}
               >
@@ -229,99 +229,99 @@ export const DeckView: React.FC<DeckViewProps> = ({
       </div>
 
       {/* Center Deck Area: Jog Wheel, Transport Buttons, & Pitch Section */}
-      <div className="flex items-center justify-between gap-3">
-        {/* Left: Pioneer CDJ Cue & Play Buttons */}
-        <div className="flex flex-col gap-3 shrink-0">
-          {/* CUE Button with Pioneer Hold-Preview Stutter & Setting Behavior */}
-          <button
-            onPointerDown={onCueDown}
-            onPointerUp={onCueUp}
-            className={`w-18 h-18 rounded-full border-2 flex flex-col items-center justify-center font-black text-sm shadow-xl active:scale-95 transition-all cursor-pointer ${!deck.isPlaying && Math.abs(deck.currentTime - deck.cuePosition) < 0.05
-                ? 'bg-[#ffaa00] text-black border-[#ffaa00] shadow-[0_0_16px_#ffaa00]'
-                : 'bg-[#161822] border-[#ffaa00] text-[#ffaa00] hover:bg-[#202534] shadow-[0_0_12px_rgba(255,170,0,0.35)]'
-              }`}
-            title="CUE: When paused, tap sets new cue point, hold plays stutter preview. When playing, tap stops & jumps to cue."
-          >
-            <span>CUE</span>
-          </button>
+        <div className="flex items-center justify-between gap-1.5 xs:gap-2 sm:gap-3">
+          {/* Left: Pioneer CDJ Cue & Play Buttons */}
+            <div className="flex flex-col gap-2 xs:gap-2.5 sm:gap-3 shrink-0">
+              {/* CUE Button with Pioneer Hold-Preview Stutter & Setting Behavior */}
+              <button
+                onPointerDown={onCueDown}
+                onPointerUp={onCueUp}
+            className={`w-12 h-12 xs:w-14 xs:h-14 sm:w-18 sm:h-18 rounded-full border-2 flex flex-col items-center justify-center font-black text-xs sm:text-sm shadow-xl active:scale-95 transition-all cursor-pointer ${!deck.isPlaying && Math.abs(deck.currentTime - deck.cuePosition) < 0.05
+                  ? 'bg-[#ffaa00] text-black border-[#ffaa00] shadow-[0_0_16px_#ffaa00]'
+                  : 'bg-[#161822] border-[#ffaa00] text-[#ffaa00] hover:bg-[#202534] shadow-[0_0_12px_rgba(255,170,0,0.35)]'
+                  }`}
+                title="CUE: When paused, tap sets new cue point, hold plays stutter preview. When playing, tap stops & jumps to cue."
+              >
+                <span>CUE</span>
+              </button>
 
-          {/* PLAY / PAUSE Button */}
-          <button
-            onClick={onPlayPause}
-            className={`w-18 h-18 rounded-full border-2 flex flex-col items-center justify-center font-black text-sm shadow-xl active:scale-95 transition-all cursor-pointer ${deck.isPlaying
-                ? 'bg-[#22c55e] text-black border-[#22c55e] shadow-[0_0_18px_#22c55e]'
-                : 'bg-[#161822] text-[#22c55e] border-[#22c55e] hover:bg-[#202534] shadow-[0_0_10px_rgba(34,197,94,0.35)]'
-              }`}
-            title="Play / Pause"
-          >
-            {deck.isPlaying ? (
-              <Pause className="w-7 h-7 fill-current" />
-            ) : (
-              <Play className="w-7 h-7 fill-current ml-0.5" />
-            )}
-          </button>
-        </div>
+              {/* PLAY / PAUSE Button */}
+              <button
+                onClick={onPlayPause}
+            className={`w-12 h-12 xs:w-14 xs:h-14 sm:w-18 sm:h-18 rounded-full border-2 flex flex-col items-center justify-center font-black text-xs sm:text-sm shadow-xl active:scale-95 transition-all cursor-pointer ${deck.isPlaying
+                  ? 'bg-[#22c55e] text-black border-[#22c55e] shadow-[0_0_18px_#22c55e]'
+                  : 'bg-[#161822] text-[#22c55e] border-[#22c55e] hover:bg-[#202534] shadow-[0_0_10px_rgba(34,197,94,0.35)]'
+                  }`}
+                title="Play / Pause"
+              >
+                {deck.isPlaying ? (
+              <Pause className="w-4 h-4 xs:w-5 xs:h-5 sm:w-7 sm:h-7 fill-current" />
+                ) : (
+              <Play className="w-4 h-4 xs:w-5 xs:h-5 sm:w-7 sm:h-7 fill-current ml-0.5" />
+                )}
+              </button>
+            </div>
 
-        {/* Center: Large Vinyl / CDJ Jog Wheel */}
-        <div className="flex-1 flex justify-center">
-          <JogWheel
-            isPlaying={deck.isPlaying}
-            playbackRate={deck.playbackRate}
-            vinylMode={deck.vinylMode}
-            color={color}
-            deckId={deck.id}
-            onStartScratch={onStartScratch}
-            onScratch={onScratch}
-            onStopScratch={onStopScratch}
-            onNudge={onNudge}
-          />
-        </div>
+            {/* Center: Large Vinyl / CDJ Jog Wheel */}
+            <div className="flex-1 flex justify-center">
+              <JogWheel
+                isPlaying={deck.isPlaying}
+                playbackRate={deck.playbackRate}
+                vinylMode={deck.vinylMode}
+                color={color}
+                deckId={deck.id}
+                onStartScratch={onStartScratch}
+                onScratch={onScratch}
+                onStopScratch={onStopScratch}
+                onNudge={onNudge}
+              />
+            </div>
 
-        {/* Right: Pitch & Tempo Slider Section */}
-        <div className="shrink-0 w-36">
-          <PitchSection
-            bpm={effectiveBpm}
-            originalBpm={deck.track?.bpm || 120}
-            pitchOffset={deck.pitchOffset}
-            pitchRange={deck.pitchRange}
-            keyLock={deck.keyLock}
-            isSync={deck.sync}
-            color={color}
-            onPitchChange={onPitchChange}
-            onPitchRangeCycle={onPitchRangeCycle}
-            onKeyLockToggle={onKeyLockToggle}
-            onSyncToggle={onSyncToggle}
-            onPitchBend={onPitchBend}
-          />
-        </div>
-      </div>
+            {/* Right: Pitch & Tempo Slider Section */}
+              <div className="shrink-0 w-24 xs:w-28 sm:w-36">
+                <PitchSection
+                  bpm={effectiveBpm}
+                  originalBpm={deck.track?.bpm || 120}
+                  pitchOffset={deck.pitchOffset}
+                  pitchRange={deck.pitchRange}
+                  keyLock={deck.keyLock}
+                  isSync={deck.sync}
+                  color={color}
+                  onPitchChange={onPitchChange}
+                  onPitchRangeCycle={onPitchRangeCycle}
+                  onKeyLockToggle={onKeyLockToggle}
+                  onSyncToggle={onSyncToggle}
+                  onPitchBend={onPitchBend}
+                />
+              </div>
+            </div>
 
-      {/* FX Rack & Performance Pads */}
-      <div className="flex flex-col gap-2">
-        <FXSection
-          fx={deck.fx}
-          color={color}
-          onToggle={onToggleFX}
-          onChangeType={onChangeFXType}
-          onChangeDryWet={onChangeFXDryWet}
-          onChangeParam={onChangeFXParam}
-        />
+            {/* FX Rack & Performance Pads */}
+            <div className="flex flex-col gap-2">
+              <FXSection
+                fx={deck.fx}
+                color={color}
+                onToggle={onToggleFX}
+                onChangeType={onChangeFXType}
+                onChangeDryWet={onChangeFXDryWet}
+                onChangeParam={onChangeFXParam}
+              />
 
-        <PerformancePads
-          hotCues={deck.hotCues}
-          currentTime={deck.currentTime}
-          bpm={effectiveBpm}
-          loop={deck.loop}
-          onSetHotCue={onSetHotCue}
-          onClearHotCue={onClearHotCue}
-          onTriggerLoop={onTriggerLoop}
-          onToggleLoop={onToggleLoop}
-          onHalveLoop={onHalveLoop}
-          onDoubleLoop={onDoubleLoop}
-          onLoopIn={onLoopIn}
-          onLoopOut={onLoopOut}
-        />
-      </div>
-    </div>
-  )
+              <PerformancePads
+                hotCues={deck.hotCues}
+                currentTime={deck.currentTime}
+                bpm={effectiveBpm}
+                loop={deck.loop}
+                onSetHotCue={onSetHotCue}
+                onClearHotCue={onClearHotCue}
+                onTriggerLoop={onTriggerLoop}
+                onToggleLoop={onToggleLoop}
+                onHalveLoop={onHalveLoop}
+                onDoubleLoop={onDoubleLoop}
+                onLoopIn={onLoopIn}
+                onLoopOut={onLoopOut}
+              />
+            </div>
+          </div>
+          )
 }

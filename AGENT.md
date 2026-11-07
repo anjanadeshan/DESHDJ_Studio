@@ -281,10 +281,39 @@ npm run dev -- --host 127.0.0.1 --port 5173
 # Execute TypeScript type check and production bundle
 npm run build
 
+# Package deployment zip for aaPanel
+Compress-Archive -Path "dist\*" -DestinationPath "deshdj_studio_build.zip" -Force
+
 # Run Vitest unit test suite
 npm test -- --run
 
 # Preview production build
 npm run preview
 ```
+
+---
+
+## 10. Production Deployment to aaPanel
+
+- **Target aaPanel Site Type**: `Pure static` website.
+- **Archive to Upload**: `deshdj_studio_build.zip` (extract directly into `/www/wwwroot/yourdomain.com`).
+- **Base Configuration**: Set to `base: './'` in `vite.config.ts` for relative, path-agnostic asset loading.
+- **SSL / HTTPS Requirement**: Must enable Let's Encrypt SSL in aaPanel. The File System Access API (`showDirectoryPicker`) requires a Secure Context (`https://`) to allow users to mount local music folders on a live public domain.
+
+---
+
+## 11. Mobile Responsiveness & Multi-Device Ergonomics
+
+- **Desktop Experience ($\ge 1280$px / `xl:`)**:
+  - 100% untouched, pixel-perfect 3-column side-by-side console (Left Deck, 3/5-channel central DJ mixer, Right Deck).
+  - Stacked 60 FPS waveforms at the top, full header controls (`BROWSE LIBRARY`, `2 DECKS`, `SETTINGS`, Keyboard Shortcuts, Fullscreen).
+  - All desktop keyboard hotkeys active.
+- **Mobile Experience ($< 1280$px / Smartphones & Tablets)**:
+  - **Segmented View Switcher**: Ergonomic top tabs (`[ DECK A ]` `[ MIXER ]` `[ DECK B ]` `[ ALL ]`) allow fast single-tap switching between deck platters and the mixer.
+  - **Quick Crossfader Strip**: Docked at the bottom when in single deck view (`mobileActiveTab === 'A' || mobileActiveTab === 'B'`), enabling DJs to perform smooth crossfades between Deck A and Deck B without navigating away from the platter!
+  - **Touch-Optimized Jog Wheel**: Responsive sizing (`w-38 h-38 xs:w-44 xs:h-44 sm:w-52 sm:h-52`) with zero right-side clipping, pointer-capture scratching, and smooth momentum CDJ pitch blending.
+  - **Pioneer Transport Controls**: Responsive CUE & PLAY buttons (`w-12 h-12 xs:w-14 xs:h-14 sm:w-18 sm:h-18`) with large touch targets.
+  - **Mobile Library Modal**: Responsive layout with percentage column sizing, hiding non-essential metadata (Artist, Duration) on small phone screens so track titles and load buttons fit comfortably without horizontal scrolling.
+
+
 
