@@ -56,6 +56,15 @@ export function App() {
   const [activeLeftDeckId, setActiveLeftDeckId] = useState<'A' | 'C'>('A')
   const [activeRightDeckId, setActiveRightDeckId] = useState<'B' | 'D'>('B')
 
+  // URL query parameter support for direct modal viewing and testing (?modal=library, ?mode=4deck, ?modal=settings, ?modal=hotkeys)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('modal') === 'library') setIsLibraryOpen(true)
+    if (params.get('modal') === 'settings') setIsSettingsOpen(true)
+    if (params.get('modal') === 'hotkeys') setIsKeyboardHelpOpen(true)
+    if (params.get('mode') === '4deck') setIsFourDeckMode(true)
+  }, [])
+
   const [decks, setDecks] = useState<DeckState[]>([
     initialDeck('A'),
     initialDeck('B'),
