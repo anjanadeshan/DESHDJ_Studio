@@ -322,19 +322,7 @@ export function App() {
       lastLoadedAt: Date.now(),
     }
 
-    // Cache waveform in IndexedDB
-    TrackDatabase.saveWaveform(newTrack.id, waveform)
-
-    // Add to library state so it persists in the session
-    setTracks((prev) => {
-      const exists = prev.some((t) => t.id === newTrack.id)
-      const updated = exists
-        ? prev.map((t) => (t.id === newTrack.id ? newTrack : t))
-        : [newTrack, ...prev]
-      TrackDatabase.saveLibrary(updated)
-      return updated
-    })
-
+    // Online streaming tracks are temporary: NEVER saved to library, database, or disk!
     node.setBuffer(audioBuffer)
     setLastSelectedTrackId(newTrack.id)
 
