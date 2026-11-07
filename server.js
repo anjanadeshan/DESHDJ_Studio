@@ -103,6 +103,8 @@ app.get('/api/stream', (req, res) => {
     '-',
     '--no-playlist',
     '--no-warnings',
+    '--no-cache-dir',
+    '--no-part',
     targetUrl,
   ])
 
@@ -129,3 +131,4 @@ if (fs.existsSync(distPath)) {
 app.listen(PORT, () => {
   console.log(`DeshDJ Audio Streaming Server running on port ${PORT}`)
 })
+

@@ -126,6 +126,8 @@ function getAudioStreamPlugin(): Plugin {
           '-',
           '--no-playlist',
           '--no-warnings',
+          '--no-cache-dir',
+          '--no-part',
           targetUrl,
         ])
 
