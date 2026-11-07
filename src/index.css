@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #0c0d11;
+    --bg-deck: #13151b;
+    --bg-mixer: #0f1015;
+    --bg-panel: #181a22;
+    --bg-panel-dark: #0a0b0e;
+    --border-subtle: #252834;
+    --border-accent: #373b4d;
+    --deck-a-color: #00e5ff;
+    --deck-b-color: #ff3366;
+    --deck-c-color: #ffaa00;
+    --deck-d-color: #a855f7;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    user-select: none;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
+/* Custom DJ Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #232733;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #373e52;
+}
+
+/* Disable text selection during drag on knobs and faders */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Glowing text and indicators */
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+}
+.glow-pink {
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.6);
+}
+.glow-green {
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
