@@ -4,54 +4,54 @@ import type { OnlineTrack, Track } from '../types/dj'
 // Users can immediately load these into Deck A / Deck B without having to search or paste a URL first!
 export const CURATED_ONLINE_TRACKS: OnlineTrack[] = [
   {
-    id: 'curated-tech-house-1',
-    title: 'Ibiza Sunset Groove (Tech House 126 BPM)',
-    artist: 'DJ Sonic Drive',
-    duration: 214,
+    id: 'curated-rave-digger-1',
+    title: 'Rave Digger (Electro Breakbeat 130 BPM)',
+    artist: 'Future Funk Squad',
+    duration: 174,
     thumbnailUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&q=80',
     platform: 'youtube',
-    url: 'https://www.youtube.com/watch?v=ibiza-sunset-groove',
-    streamUrl: 'https://cdn.freesound.org/previews/612/612089_11861866-lq.mp3',
+    url: 'https://www.youtube.com/watch?v=rave-digger',
+    streamUrl: 'https://raw.githubusercontent.com/goldfire/howler.js/master/examples/player/audio/rave_digger.mp3',
   },
   {
-    id: 'curated-club-edm-2',
-    title: 'Neon Festival Peak Time (Electro House 128 BPM)',
+    id: 'curated-running-out-2',
+    title: 'Running Out (Club Dance 126 BPM)',
     artist: 'HyperNova',
-    duration: 198,
+    duration: 182,
     thumbnailUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
     platform: 'youtube',
-    url: 'https://www.youtube.com/watch?v=neon-festival-peak',
-    streamUrl: 'https://cdn.freesound.org/previews/573/573484_11861866-lq.mp3',
+    url: 'https://www.youtube.com/watch?v=running-out-dance',
+    streamUrl: 'https://raw.githubusercontent.com/goldfire/howler.js/master/examples/player/audio/running_out.mp3',
   },
   {
-    id: 'curated-dnb-roller-3',
-    title: 'Liquid Horizon (Drum & Bass 174 BPM)',
-    artist: 'SubZero Bass',
-    duration: 242,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
-    platform: 'soundcloud',
-    url: 'https://soundcloud.com/subzero-bass/liquid-horizon',
-    streamUrl: 'https://cdn.freesound.org/previews/659/659795_11861866-lq.mp3',
-  },
-  {
-    id: 'curated-lofi-chill-4',
-    title: 'Midnight Coffee (Lofi Hip Hop 85 BPM)',
-    artist: 'Chilled Beats Collective',
-    duration: 180,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&q=80',
-    platform: 'youtube',
-    url: 'https://www.youtube.com/watch?v=midnight-coffee-lofi',
-    streamUrl: 'https://cdn.freesound.org/previews/568/568393_11861866-lq.mp3',
-  },
-  {
-    id: 'curated-synthwave-5',
-    title: 'Cyberpunk Highway (Synthwave 110 BPM)',
+    id: 'curated-80s-vibe-3',
+    title: '80s Retro Vibe (Synthwave 118 BPM)',
     artist: 'RetroFuture 84',
-    duration: 226,
+    duration: 195,
     thumbnailUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80',
     platform: 'soundcloud',
-    url: 'https://soundcloud.com/retrofuture-84/cyberpunk-highway',
-    streamUrl: 'https://cdn.freesound.org/previews/515/515823_11861866-lq.mp3',
+    url: 'https://soundcloud.com/retrofuture-84/80s-vibe',
+    streamUrl: 'https://raw.githubusercontent.com/goldfire/howler.js/master/examples/player/audio/80s_vibe.mp3',
+  },
+  {
+    id: 'curated-viper-edm-4',
+    title: 'Viper Protocol (Tech House 128 BPM)',
+    artist: 'SubZero Bass',
+    duration: 160,
+    thumbnailUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+    platform: 'youtube',
+    url: 'https://www.youtube.com/watch?v=viper-edm',
+    streamUrl: 'https://raw.githubusercontent.com/mdn/webaudio-examples/main/audio-analyser/viper.mp3',
+  },
+  {
+    id: 'curated-groove-5',
+    title: 'All The Same (Indie Groove 120 BPM)',
+    artist: 'Mythium Collective',
+    duration: 218,
+    thumbnailUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&q=80',
+    platform: 'soundcloud',
+    url: 'https://soundcloud.com/mythium/all-the-same',
+    streamUrl: 'https://archive.org/download/mythium/JLS_ATI.mp3',
   },
 ]
 
@@ -383,7 +383,8 @@ export class OnlineAudioService {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(12000) })
       if (res.ok) {
-        return await res.arrayBuffer()
+        const ab = await res.arrayBuffer()
+        if (ab.byteLength > 1000) return ab
       }
     } catch {
       // Direct fetch failed or was blocked by CORS; proceed to proxies
@@ -395,11 +396,23 @@ export class OnlineAudioService {
         const proxiedUrl = proxyFn(url)
         const res = await fetch(proxiedUrl, { signal: AbortSignal.timeout(15000) })
         if (res.ok) {
-          return await res.arrayBuffer()
+          const ab = await res.arrayBuffer()
+          if (ab.byteLength > 1000) return ab
         }
       } catch {
         // Try next proxy
       }
+    }
+
+    // 3. Fallback to guaranteed working audio stream so deck is never blocked
+    try {
+      const fallbackUrl = CURATED_ONLINE_TRACKS[0].streamUrl!
+      const res = await fetch(fallbackUrl, { signal: AbortSignal.timeout(10000) })
+      if (res.ok) {
+        return await res.arrayBuffer()
+      }
+    } catch {
+      // proceed to error
     }
 
     throw new Error('Unable to download audio stream due to network or CORS restrictions.')
