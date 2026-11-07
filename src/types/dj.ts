@@ -8,6 +8,8 @@ export interface WaveformData {
   length: number
 }
 
+export type TrackSource = 'local' | 'youtube' | 'soundcloud' | 'url'
+
 export interface Track {
   id: string
   name: string
@@ -20,9 +22,23 @@ export interface Track {
   file?: File
   handle?: FileSystemFileHandle
   coverArtUrl?: string
+  thumbnailUrl?: string
   waveform?: WaveformData
   audioBuffer?: AudioBuffer
   lastLoadedAt?: number
+  source?: TrackSource
+  streamUrl?: string
+}
+
+export interface OnlineTrack {
+  id: string
+  title: string
+  artist: string
+  duration: number
+  thumbnailUrl: string
+  platform: 'youtube' | 'soundcloud' | 'url'
+  url: string
+  streamUrl?: string
 }
 
 export type FXType = 'echo' | 'reverb' | 'flanger' | 'bitcrusher'

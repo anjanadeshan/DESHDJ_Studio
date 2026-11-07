@@ -230,5 +230,10 @@ export class AudioEngine {
     const arrayBuffer = await file.arrayBuffer()
     return await this.ctx.decodeAudioData(arrayBuffer)
   }
+
+  public async decodeArrayBuffer(arrayBuffer: ArrayBuffer): Promise<AudioBuffer> {
+    await this.resume()
+    return await this.ctx.decodeAudioData(arrayBuffer)
+  }
 }
 

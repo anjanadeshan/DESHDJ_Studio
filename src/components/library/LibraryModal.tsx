@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react'
-import type { DeckId, Track } from '../../types/dj'
+import type { DeckId, Track, OnlineTrack } from '../../types/dj'
 import { FileSystemManager } from '../../library/FileSystemManager'
 import { formatTime, formatBpm } from '../../utils/formatters'
-import { FolderOpen, Upload, Search, Music, Disc3, Trash2, X } from 'lucide-react'
+import { FolderOpen, Upload, Search, Music, Disc3, Trash2, X, Globe } from 'lucide-react'
+import { OnlineStreamerTab } from './OnlineStreamerTab'
 
 interface LibraryModalProps {
   isOpen: boolean
@@ -14,6 +15,11 @@ interface LibraryModalProps {
   onAddTracks: (tracks: Track[]) => void
   onClearLibrary: () => void
   onLoadTrackToDeck: (track: Track, deckId: DeckId) => void
+  onLoadOnlineTrackToDeck?: (
+    input: OnlineTrack | string,
+    deckId: DeckId,
+    onProgress: (status: string) => void
+  ) => Promise<void>
 }
 
 export const LibraryModal: React.FC<LibraryModalProps> = ({
@@ -26,7 +32,9 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
   onAddTracks,
   onClearLibrary,
   onLoadTrackToDeck,
+  onLoadOnlineTrackToDeck,
 }) => {
+  const [activeTab, setActiveTab] = useState<'local' | 'online'>('local')
   const [search, setSearch] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [scanStatus, setScanStatus] = useState('')
@@ -95,27 +103,62 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-5">
           <div className="bg-[#10121a] border border-[#272c3d] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden text-neutral-200 select-none animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-                <div className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-3.5 bg-[#141622] border-b border-[#212638] shrink-0">
-                  <div className="flex items-center gap-2 sm:gap-2.5">
-                    <Music className="w-5 h-5 text-[#00e5ff]" />
-                      <h2 className="text-sm sm:text-base font-bold text-white tracking-wide truncate">
-                        {targetDeckId ? `LOAD TRACK INTO DECK ${targetDeckId}` : 'TRACK LIBRARY & LOCAL CRATE'}
-                      </h2>
-                        <span className="hidden xs:inline text-xs font-mono text-neutral-400 px-2 py-0.5 bg-[#1b1e2c] rounded border border-[#2b3044] ml-1 sm:ml-2">
-                          {filteredTracks.length} tracks
-                        </span>
-                      </div>
+            <div className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-3.5 bg-[#141622] border-b border-[#212638] shrink-0 gap-2 flex-wrap">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <Music className="w-5 h-5 text-[#00e5ff]" />
+                <h2 className="text-sm sm:text-base font-bold text-white tracking-wide truncate">
+                  {targetDeckId ? `LOAD TRACK INTO DECK ${targetDeckId}` : 'TRACK LIBRARY'}
+                </h2>
+              </div>
 
-                      <button
-                        onClick={onClose}
-                        className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-[#202536] transition-colors cursor-pointer"
-                        title="Close Library (Esc)"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                  </div>
+              {/* Tab Selector: Local Crates vs Online Streamer */}
+              <div className="flex items-center bg-[#171a26] p-0.5 rounded-lg border border-[#272d40]">
+                <button
+                  onClick={() => setActiveTab('local')}
+                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeTab === 'local'
+                      ? 'bg-[#00e5ff] text-black shadow'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span>Local Crates</span>
+                  <span className="text-[10px] opacity-75 font-mono ml-0.5">({tracks.length})</span>
+                </button>
+                {onLoadOnlineTrackToDeck && (
+                  <button
+                    onClick={() => setActiveTab('online')}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      activeTab === 'online'
+                        ? 'bg-gradient-to-r from-[#ff0033] to-[#ff5500] text-white shadow'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Online Streamer</span>
+                    <span className="text-[9px] uppercase px-1 py-0.2 bg-black/40 rounded ml-0.5">YT / SC</span>
+                  </button>
+                )}
+              </div>
 
-                  {/* Toolbar: Open Folder, Add Files, Search */}
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-[#202536] transition-colors cursor-pointer"
+                title="Close Library (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {activeTab === 'online' && onLoadOnlineTrackToDeck ? (
+              <OnlineStreamerTab
+                isFourDeckMode={isFourDeckMode}
+                targetDeckId={targetDeckId}
+                onLoadOnlineTrackToDeck={onLoadOnlineTrackToDeck}
+              />
+            ) : (
+              <>
+                {/* Toolbar: Open Folder, Add Files, Search */}
                       <div className="flex items-center justify-between p-2 sm:p-3 bg-[#0d0f16] border-b border-[#1f2334] gap-2 shrink-0 flex-wrap">
                         <div className="flex items-center gap-2 flex-wrap">
                           {FileSystemManager.isSupported() && (
@@ -359,7 +402,9 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
                                               Close
                                             </button>
                                           </div>
-                                        </div>
+                                        </>
+                                      )}
+                                    </div>
     </div>
-                                  )
+  )
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { DeckId, DeckState, Track, MixerState, FXType } from './types/dj'
+import type { DeckId, DeckState, Track, MixerState, FXType, OnlineTrack } from './types/dj'
 import { AudioEngine } from './audio/AudioEngine'
 import { extractWaveformData } from './audio/WaveformExtractor'
 import { detectBpm } from './audio/BpmDetector'
 import { TrackDatabase } from './library/TrackDatabase'
 import { FileSystemManager } from './library/FileSystemManager'
+import { OnlineAudioService } from './services/onlineAudioService'
 import { TopBar } from './components/header/TopBar'
 import { StackedWaveforms } from './components/waveform/StackedWaveforms'
 import { DeckView } from './components/deck/DeckView'
@@ -204,15 +205,30 @@ export function App() {
     }
   }
 
-  // Load track into deck
+  // Load track into deck (handles local files, pre-buffered audio, and stream URLs)
   const handleLoadTrack = async (track: Track, deckId: DeckId) => {
     await ensureAudioResumed()
     const engine = getAudioEngine()
     const node = engine.getDeck(deckId)
-    if (!node || !track.file) return
+    if (!node) return
 
     try {
-      const audioBuffer = await engine.decodeAudioFile(track.file)
+      let audioBuffer = track.audioBuffer
+      if (!audioBuffer) {
+        if (track.file) {
+          audioBuffer = await engine.decodeAudioFile(track.file)
+        } else if (track.streamUrl) {
+          const res = await fetch(track.streamUrl)
+          const ab = await res.arrayBuffer()
+          audioBuffer = await engine.decodeArrayBuffer(ab)
+        }
+      }
+
+      if (!audioBuffer) {
+        alert('Could not decode audio for track')
+        return
+      }
+
       track.audioBuffer = audioBuffer
 
       // High-resolution Waveform extraction
@@ -260,6 +276,86 @@ export function App() {
       console.error('Failed to load track into deck:', err)
       alert(`Could not load track: ${(err as Error).message}`)
     }
+  }
+
+  // Handle loading online track (YouTube, SoundCloud, or Direct URL) with live progress
+  const handleLoadOnlineTrackToDeck = async (
+    input: OnlineTrack | string,
+    deckId: DeckId,
+    onProgress: (status: string) => void
+  ) => {
+    await ensureAudioResumed()
+    const engine = getAudioEngine()
+    const node = engine.getDeck(deckId)
+    if (!node) return
+
+    onProgress('Connecting to audio source...')
+    const { arrayBuffer, metadata } = await OnlineAudioService.resolveAndDownloadAudio(
+      input,
+      onProgress
+    )
+
+    onProgress('Decoding audio samples...')
+    const audioBuffer = await engine.decodeArrayBuffer(arrayBuffer)
+
+    onProgress('Extracting 3-band waveform...')
+    const waveform = await extractWaveformData(audioBuffer)
+
+    onProgress('Analyzing beatgrid & BPM...')
+    const bpmAnalysis = detectBpm(audioBuffer)
+
+    const trackId = typeof input === 'string' ? `online-${Date.now()}` : input.id
+
+    const newTrack: Track = {
+      id: trackId,
+      name: metadata.title || 'Online Stream',
+      title: metadata.title || 'Online Stream',
+      artist: metadata.artist || 'Web Stream',
+      album: metadata.source ? `${metadata.source.toUpperCase()} Stream` : 'Online Stream',
+      duration: audioBuffer.duration,
+      bpm: bpmAnalysis.bpm || 120,
+      coverArtUrl: metadata.coverArtUrl,
+      source: metadata.source || 'url',
+      streamUrl: metadata.streamUrl,
+      audioBuffer,
+      waveform,
+      lastLoadedAt: Date.now(),
+    }
+
+    // Cache waveform in IndexedDB
+    TrackDatabase.saveWaveform(newTrack.id, waveform)
+
+    // Add to library state so it persists in the session
+    setTracks((prev) => {
+      const exists = prev.some((t) => t.id === newTrack.id)
+      const updated = exists
+        ? prev.map((t) => (t.id === newTrack.id ? newTrack : t))
+        : [newTrack, ...prev]
+      TrackDatabase.saveLibrary(updated)
+      return updated
+    })
+
+    node.setBuffer(audioBuffer)
+    setLastSelectedTrackId(newTrack.id)
+
+    setDecks((prev) =>
+      prev.map((d) =>
+        d.id === deckId
+          ? {
+              ...d,
+              track: newTrack,
+              duration: audioBuffer.duration,
+              currentTime: 0,
+              isPlaying: false,
+              cuePosition: 0,
+              hotCues: Array(8).fill(null),
+              loop: { active: false, start: 0, end: 0, beats: 4 },
+            }
+          : d
+      )
+    )
+
+    onProgress('Loaded into Deck!')
   }
 
   // Handle drop of file or track ID directly on a specific deck
@@ -1254,6 +1350,7 @@ export function App() {
             setTracks([])
           }}
           onLoadTrackToDeck={(track, deckId) => handleLoadTrack(track, deckId)}
+          onLoadOnlineTrackToDeck={handleLoadOnlineTrackToDeck}
         />
 
         {/* Settings Modal */}
