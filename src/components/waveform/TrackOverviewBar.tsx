@@ -73,7 +73,8 @@ export const TrackOverviewBar: React.FC<TrackOverviewBarProps> = ({
     <div
       ref={barRef}
       onClick={handleClick}
-      className="relative w-full h-7 bg-[#0b0c10] border border-[#232733] rounded-[3px] cursor-pointer overflow-hidden group select-none"
+      className="relative w-full h-7 bg-[#0b0c10] border border-[#232733] rounded-[3px] cursor-pointer overflow-hidden group select-none touch-none"
+      style={{ touchAction: 'none' }}
       title="Click anywhere to seek track position"
     >
       {/* Waveform graphic */}

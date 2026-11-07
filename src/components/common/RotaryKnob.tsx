@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react'
+import React, { useRef, useState } from 'react'
 
 interface RotaryKnobProps {
   label: string
@@ -31,6 +31,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
   const [isDragging, setIsDragging] = useState(false)
   const dragStartY = useRef(0)
   const dragStartValue = useRef(0)
+  const activePointerId = useRef<number | null>(null)
 
   // Map value to angle (-135 deg to +135 deg, 270 deg total range)
   // For bipolar knobs (EQs, Filter), value = 0 MUST be 0 deg (12 o'clock)!
@@ -49,11 +50,43 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
     angle = -135 + norm * 270
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Pointer Down handles both mobile touch and desktop mouse clicks
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Prevent mobile page scrolling while turning knob
     e.preventDefault()
     setIsDragging(true)
     dragStartY.current = e.clientY
     dragStartValue.current = value
+    activePointerId.current = e.pointerId
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || activePointerId.current !== e.pointerId) return
+    e.preventDefault()
+    const deltaY = dragStartY.current - e.clientY // up is positive
+    const range = max - min
+    const sensitivity = e.shiftKey ? 0.001 : 0.0055
+    const change = deltaY * range * sensitivity
+    const next = Math.max(min, Math.min(max, dragStartValue.current + change))
+    onChange(next)
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerId.current === e.pointerId) {
+      setIsDragging(false)
+      activePointerId.current = null
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      } catch {
+        // ignore
+      }
+    }
   }
 
   const handleDoubleClick = () => {
@@ -67,34 +100,6 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
     const next = Math.max(min, Math.min(max, value + delta))
     onChange(next)
   }
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging) return
-      const deltaY = dragStartY.current - e.clientY // up is positive
-      const range = max - min
-      const sensitivity = e.shiftKey ? 0.001 : 0.004
-      const change = deltaY * range * sensitivity
-      const next = Math.max(min, Math.min(max, dragStartValue.current + change))
-      onChange(next)
-    },
-    [isDragging, max, min, onChange]
-  )
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false)
-  }, [])
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove)
-        window.removeEventListener('mouseup', handleMouseUp)
-      }
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp])
 
   // Compute SVG arc
   const radius = size * 0.4
@@ -127,16 +132,19 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
       : `${value > 0 && bipolar ? '+' : ''}${value.toFixed(1)}${unit}`
 
   return (
-    <div className="flex flex-col items-center select-none group">
+    <div className="flex flex-col items-center select-none group touch-none">
       <div
-        className="relative cursor-ns-resize flex items-center justify-center"
-        style={{ width: size, height: size }}
-        onMouseDown={handleMouseDown}
+        className="relative cursor-ns-resize flex items-center justify-center touch-none select-none"
+        style={{ width: size, height: size, touchAction: 'none' }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onDoubleClick={handleDoubleClick}
         onWheel={handleWheel}
         title={`${label}: ${formattedValue} (Double-click to reset to 12 o'clock)`}
       >
-        <svg width={size} height={size} className="overflow-visible">
+        <svg width={size} height={size} className="overflow-visible pointer-events-none">
           {/* Background Track */}
           <path
             d={bgArc}
@@ -196,10 +204,10 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
         </svg>
       </div>
 
-      <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase mt-0.5 group-hover:text-neutral-200">
+      <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase mt-0.5 group-hover:text-neutral-200 pointer-events-none">
         {label}
       </span>
-      <span className="text-[9px] font-mono text-neutral-500 font-medium">
+      <span className="text-[9px] font-mono text-neutral-500 font-medium pointer-events-none">
         {formattedValue}
       </span>
     </div>

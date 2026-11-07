@@ -350,7 +350,8 @@ export const StackedWaveforms: React.FC<StackedWaveformsProps> = ({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          className="w-full cursor-grab active:cursor-grabbing block"
+          className="w-full cursor-grab active:cursor-grabbing block touch-none"
+          style={{ touchAction: 'none' }}
         />
       </div>
       )

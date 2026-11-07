@@ -219,7 +219,8 @@ export const JogWheel: React.FC<JogWheelProps> = ({
         onPointerDown={handleRimPointerDown}
         onPointerMove={handleRimPointerMove}
         onPointerUp={handleRimPointerUp}
-        className="relative w-38 h-38 xs:w-44 xs:h-44 sm:w-52 sm:h-52 rounded-full bg-[#101218] p-2 border-2 border-[#2b3042] shadow-2xl flex items-center justify-center cursor-ew-resize group"
+        className="relative w-38 h-38 xs:w-44 xs:h-44 sm:w-52 sm:h-52 rounded-full bg-[#101218] p-2 border-2 border-[#2b3042] shadow-2xl flex items-center justify-center cursor-ew-resize group touch-none select-none"
+        style={{ touchAction: 'none' }}
         title="Jog Wheel: Drag Center Vinyl to scratch/scrub, Outer Rim to pitch bend/nudge"
       >
         {/* Outer Dot Ring Ticks (CDJ rim dots) */}
@@ -230,8 +231,9 @@ export const JogWheel: React.FC<JogWheelProps> = ({
           onPointerDown={handlePlatterPointerDown}
           onPointerMove={handlePlatterPointerMove}
           onPointerUp={handlePlatterPointerUp}
-          className="relative w-30 h-30 xs:w-36 xs:h-36 sm:w-42 sm:h-42 rounded-full cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center transition-shadow"
+          className="relative w-30 h-30 xs:w-36 xs:h-36 sm:w-42 sm:h-42 rounded-full cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center transition-shadow touch-none select-none"
           style={{
+            touchAction: 'none',
             background:
               'radial-gradient(circle, #0e1017 0%, #151821 40%, #0a0b0f 70%, #1f2330 100%)',
             boxShadow: (isVinylGrabbing || isCDJInteracting)

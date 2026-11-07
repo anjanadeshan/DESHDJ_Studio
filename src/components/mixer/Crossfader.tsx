@@ -94,8 +94,10 @@ export const Crossfader: React.FC<CrossfaderProps> = ({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onDoubleClick={handleDoubleClick}
-        className="relative w-full h-8 flex items-center cursor-pointer group py-1"
+        className="relative w-full h-8 flex items-center cursor-pointer group py-1 touch-none select-none"
+        style={{ touchAction: 'none' }}
         title="Crossfader (Double-click to center, Hotkeys: X, C, V)"
       >
         {/* Track Slot */}

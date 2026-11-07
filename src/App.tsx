@@ -1217,7 +1217,8 @@ export function App() {
                 step="0.01"
                 value={mixerState.crossfader}
                 onChange={(e) => handleChangeCrossfader(parseFloat(e.target.value))}
-                className="flex-1 accent-[#00e5ff] cursor-pointer h-2 bg-[#1c202e] rounded-lg"
+                className="flex-1 accent-[#00e5ff] cursor-pointer h-2 bg-[#1c202e] rounded-lg touch-none"
+                style={{ touchAction: 'none' }}
                 title="Quick Crossfader"
               />
               <span

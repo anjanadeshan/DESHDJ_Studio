@@ -92,11 +92,12 @@ export const VerticalFader: React.FC<VerticalFaderProps> = ({
         {/* Fader Track */}
         <div
           ref={trackRef}
-          className="relative cursor-pointer flex justify-center py-2 group"
-          style={{ height, width }}
+          className="relative cursor-pointer flex justify-center py-2 group touch-none select-none"
+          style={{ height, width, touchAction: 'none' }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onDoubleClick={handleDoubleClick}
           title={`${label || 'Fader'}: ${displayValue || value.toFixed(2)} (Double-click to reset)`}
         >
